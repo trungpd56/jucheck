@@ -11,6 +11,10 @@ B = "\033[0;34;40m"  # Blue
 N = "\033[0m"  # Reset
 
 
+def cls():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
 class judev:
     def __init__(self, ip, user, password):
         self.ip = ip
@@ -41,11 +45,11 @@ class judev:
         with Device(self.ip, user=self.user, password=self.password) as dev:
             while True:
                 try:
-                    os.system('clear')
                     isadj = judev.get_isadj(
                         dev.rpc.get_isis_adjacency_information())
                     isconf = judev.get_isconf(dev.rpc.get_configuration())
                     intinfo = judev.get_intinfo(dev.rpc.get_configuration())
+                    cls()
                     judev.print_nei(isconf, isadj, intinfo)
                     print('\n\nCtrl-C to quit')
                     time.sleep(3)
@@ -73,11 +77,11 @@ class judev:
         with Device(self.ip, user=self.user, password=self.password) as dev:
             while True:
                 try:
-                    os.system('clear')
                     osnei = judev.get_osnei(
                         dev.rpc.get_ospf_neighbor_information())
                     osconf = judev.get_osconf(dev.rpc.get_configuration())
                     intinfo = judev.get_intinfo(dev.rpc.get_configuration())
+                    cls()
                     judev.print_nei(osconf, osnei, intinfo)
                     print('\n\nCtrl-C to quit')
                     time.sleep(3)
@@ -113,8 +117,8 @@ class judev:
                 if i in neighbor.keys():
                     if neighbor[i][1] == 'Up' or neighbor[i][1] == 'Full':
                         state = '[+]'
-                        t.add_row([B + state + N, B + i + N, B +
-                                   neighbor[i][0] + N, B + neighbor[i][1] + N, B + intinfo[i][0] + N, B + intinfo[i][1] + N])
+                        t.add_row([G + state + N, G + i + N, G +
+                                   neighbor[i][0] + N, G + neighbor[i][1] + N, G + intinfo[i][0] + N, G + intinfo[i][1] + N])
                     else:
                         state = '[*]'
                         t.add_row([Y + state + N, Y + i + N, Y +
@@ -132,8 +136,8 @@ class judev:
                     ingress, egress, transit = judev.get_lsp(
                         dev.rpc.get_mpls_lsp_information())
                     lspconf = judev.get_lspconf(dev.rpc.get_configuration())
-                    os.system('clear')
                     ingress_up = [i for i in ingress if i['name'] in lspconf]
+                    cls()
                     judev.print_lsp(ingress_up, egress, transit)
                     print('\n\nCtrl-C to quit')
                     time.sleep(3)
@@ -150,8 +154,8 @@ class judev:
         for i in ingress_up:
             if i['state'] == 'Up':
                 status1 = '[+]'
-                ingress_table.add_row([B + status1 + N, B + i['name'] + N, B +
-                                       i['source'] + N, B + i['destination'] + N, B + i['state'] + N])
+                ingress_table.add_row([G + status1 + N, G + i['name'] + N, G +
+                                       i['source'] + N, G + i['destination'] + N, G + i['state'] + N])
             else:
                 status1 = '[-]'
                 ingress_table.add_row([R + status1 + N, R + i['name'] + N, R +
@@ -164,8 +168,8 @@ class judev:
         for i in egress:
             if i['state'] == 'Up':
                 status2 = '[+]'
-                egress_table.add_row([B + status2 + N, B + i['name'] + N, B +
-                                      i['source'] + N, B + i['destination'] + N, B + i['state'] + N])
+                egress_table.add_row([G + status2 + N, G + i['name'] + N, G +
+                                      i['source'] + N, G + i['destination'] + N, G + i['state'] + N])
             else:
                 status2 = '[-]'
                 egress_table.add_row([R + status2 + N, R + i['name'] + N, R +
@@ -178,8 +182,8 @@ class judev:
         for i in transit:
             if i['state'] == 'Up':
                 status3 = '[+]'
-                transit_table.add_row([B + status3 + N, B + i['name'] + N, B +
-                                       i['source'] + N, B + i['destination'] + N, B + i['state'] + N])
+                transit_table.add_row([G + status3 + N, G + i['name'] + N, G +
+                                       i['source'] + N, G + i['destination'] + N, G + i['state'] + N])
             else:
                 status2 = '[-]'
                 transit_table.add_row([R + status3 + N, R + i['name'] + N, R +
