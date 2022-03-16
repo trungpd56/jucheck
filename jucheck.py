@@ -1,8 +1,14 @@
 from jnpr.junos import Device
 import time
 import os
-from termcolor import colored
 from getpass import getpass
+from prettytable import PrettyTable
+
+R = "\033[0;31;40m"  # RED
+G = "\033[0;32;40m"  # GREEN
+Y = "\033[0;33;40m"  # Yellow
+B = "\033[0;34;40m"  # Blue
+N = "\033[0m"  # Reset
 
 
 class judev:
@@ -34,13 +40,17 @@ class judev:
     def check_isis(self):
         with Device(self.ip, user=self.user, password=self.password) as dev:
             while True:
-                os.system('clear')
-                isadj = judev.get_isadj(
-                    dev.rpc.get_isis_adjacency_information())
-                isconf = judev.get_isconf(dev.rpc.get_configuration())
-                intinfo = judev.get_intinfo(dev.rpc.get_configuration())
-                judev.print_nei(isconf, isadj, intinfo)
-                time.sleep(3)
+                try:
+                    os.system('clear')
+                    isadj = judev.get_isadj(
+                        dev.rpc.get_isis_adjacency_information())
+                    isconf = judev.get_isconf(dev.rpc.get_configuration())
+                    intinfo = judev.get_intinfo(dev.rpc.get_configuration())
+                    judev.print_nei(isconf, isadj, intinfo)
+                    print('\n\nCtrl-C to quit')
+                    time.sleep(3)
+                except KeyboardInterrupt:
+                    break
 
     @staticmethod
     def get_isadj(x):
@@ -62,13 +72,17 @@ class judev:
     def check_ospf(self):
         with Device(self.ip, user=self.user, password=self.password) as dev:
             while True:
-                os.system('clear')
-                osnei = judev.get_osnei(
-                    dev.rpc.get_ospf_neighbor_information())
-                osconf = judev.get_osconf(dev.rpc.get_configuration())
-                intinfo = judev.get_intinfo(dev.rpc.get_configuration())
-                judev.print_nei(osconf, osnei, intinfo)
-                time.sleep(3)
+                try:
+                    os.system('clear')
+                    osnei = judev.get_osnei(
+                        dev.rpc.get_ospf_neighbor_information())
+                    osconf = judev.get_osconf(dev.rpc.get_configuration())
+                    intinfo = judev.get_intinfo(dev.rpc.get_configuration())
+                    judev.print_nei(osconf, osnei, intinfo)
+                    print('\n\nCtrl-C to quit')
+                    time.sleep(3)
+                except KeyboardInterrupt:
+                    break
 
     @staticmethod
     def get_osnei(x):
@@ -89,58 +103,88 @@ class judev:
 
     @staticmethod
     def print_nei(conf, neighbor, intinfo):
-        print('NEIGHBOR TABLE' + '----' * 16 + 'Trung-VDT-0988886298-----')
+        print('Contact Trung-VDT-0988886298 if error')
+        print('--' * 19 + '\n')
+        print('Adjacency Table')
+        t = PrettyTable(['Status', 'Interface', 'Neighbor-ID',
+                         'State', 'Description', 'InterfaceIP'])
         for i in conf:
             if 'lo' not in i:
                 if i in neighbor.keys():
                     if neighbor[i][1] == 'Up' or neighbor[i][1] == 'Full':
-                        print(colored(
-                            f"[+] Interface {i:14s} | {neighbor[i][0]:16s} | {neighbor[i][1]:14s} | {intinfo[i][0]:15s} | {intinfo[i][1]}", 'blue'))
+                        state = '[+]'
+                        t.add_row([B + state + N, B + i + N, B +
+                                   neighbor[i][0] + N, B + neighbor[i][1] + N, B + intinfo[i][0] + N, B + intinfo[i][1] + N])
                     else:
-                        print(
-                            f"[*] Interface {i:14s} | {neighbor[i][0]:16s} | {neighbor[i][1]:14s} | {intinfo[i][0]:15s} | {intinfo[i][1]}")
+                        state = '[*]'
+                        t.add_row([Y + state + N, Y + i + N, Y +
+                                   neighbor[i][0] + N, Y + neighbor[i][1] + N, Y + intinfo[i][0] + N, Y + intinfo[i][1] + N])
                 else:
-                    print(colored(
-                        f"[-] Interface {i:14s} | {'UNKNOWN':16s} | {'UNKNOWN':14s} | {intinfo[i][0]:15s} | {intinfo[i][1]}", 'red'))
+                    state = '[-]'
+                    t.add_row([R + state + N, R + i + N, R +
+                               'UNKNOWN' + N, R + 'UNKNOWN' + N, R + intinfo[i][0] + N, R + intinfo[i][1] + N])
+        print(t)
 
     def check_lsp(self):
         with Device(self.ip, user=self.user, password=self.password) as dev:
             while True:
-                ingress, egress, transit = judev.get_lsp(
-                    dev.rpc.get_mpls_lsp_information())
-                lspconf = judev.get_lspconf(dev.rpc.get_configuration())
-                os.system('clear')
-                ingress_up = [i for i in ingress if i['name'] in lspconf]
-                # print(ingress_up, egress, transit, lspconf)
-                judev.print_lsp(ingress_up, egress, transit)
-                time.sleep(3)
+                try:
+                    ingress, egress, transit = judev.get_lsp(
+                        dev.rpc.get_mpls_lsp_information())
+                    lspconf = judev.get_lspconf(dev.rpc.get_configuration())
+                    os.system('clear')
+                    ingress_up = [i for i in ingress if i['name'] in lspconf]
+                    judev.print_lsp(ingress_up, egress, transit)
+                    print('\n\nCtrl-C to quit')
+                    time.sleep(3)
+                except KeyboardInterrupt:
+                    break
 
     @staticmethod
     def print_lsp(ingress_up, egress, transit):
-        print('Ingress' + '----' * 14 + 'Trung-VDT-0988886298----')
+        print('Contact Trung-VDT-0988886298 if error')
+        print('--' * 19 + '\n')
+        ingress_table = PrettyTable(
+            ['Status', 'Name', 'Souce', 'Destination', 'State'])
+        print('Ingress Table')
         for i in ingress_up:
             if i['state'] == 'Up':
-                print(colored(
-                    f"[+] Name {i['name']:14s} | Source {i['source']:16s} | Destination {i['destination']:14s} | {i['state']:15s}", 'blue'))
+                status1 = '[+]'
+                ingress_table.add_row([B + status1 + N, B + i['name'] + N, B +
+                                       i['source'] + N, B + i['destination'] + N, B + i['state'] + N])
             else:
-                print(colored(
-                    f"[-] Name {i['name']:14s} | Source {i['source']:16s} | Destination {i['destination']:14s} | {i['state']:15s}", 'red'))
-        print('Egress ' + '----' * 20)
+                status1 = '[-]'
+                ingress_table.add_row([R + status1 + N, R + i['name'] + N, R +
+                                       i['source'] + N, R + i['destination'] + N, R + i['state'] + N])
+        print(ingress_table)
+        print('\nEgress Table')
+        egress_table = PrettyTable(
+            ['Status', 'Name', 'Souce', 'Destination', 'State'])
+
         for i in egress:
             if i['state'] == 'Up':
-                print(colored(
-                    f"[+] Name {i['name']:14s} | Source {i['source']:16s} | Destination {i['destination']:14s} | {i['state']:15s}", 'blue'))
+                status2 = '[+]'
+                egress_table.add_row([B + status2 + N, B + i['name'] + N, B +
+                                      i['source'] + N, B + i['destination'] + N, B + i['state'] + N])
             else:
-                print(colored(
-                    f"[-] Name {i['name']:14s} | Source {i['source']:16s} | Destination {i['destination']:14s} | {i['state']:15s}", 'red'))
-        print('Transit' + '----' * 20)
+                status2 = '[-]'
+                egress_table.add_row([R + status2 + N, R + i['name'] + N, R +
+                                      i['source'] + N, R + i['destination'] + N, R + i['state'] + N])
+        print(egress_table)
+
+        print('\nTransit Table')
+        transit_table = PrettyTable(
+            ['Status', 'Name', 'Souce', 'Destination', 'State'])
         for i in transit:
             if i['state'] == 'Up':
-                print(colored(
-                    f"[+] Name {i['name']:14s} | Source {i['source']:16s} | Destination {i['destination']:14s} | {i['state']:15s}", 'blue'))
+                status3 = '[+]'
+                transit_table.add_row([B + status3 + N, B + i['name'] + N, B +
+                                       i['source'] + N, B + i['destination'] + N, B + i['state'] + N])
             else:
-                print(colored(
-                    f"[-] Name {i['name']:14s} | Source {i['source']:16s} | Destination {i['destination']:14s} | {i['state']:15s}", 'red'))
+                status2 = '[-]'
+                transit_table.add_row([R + status3 + N, R + i['name'] + N, R +
+                                       i['source'] + N, R + i['destination'] + N, R + i['state'] + N])
+        print(transit_table)
 
     @staticmethod
     def get_lspconf(x):
@@ -191,13 +235,12 @@ class judev:
 
 
 if __name__ == '__main__':
-    print('-' * 15 + 'Trung-VDT-098886298' + '-' * 7)
-    ip = input('Nhap dia chi IP quan tri' + ' ' * 9 + ': ')
-    monitor = int(input('Lua chon 1(ospf), 2(isis), 3(lsp): '))
-    username = input('Nhap username dang nhap' + ' ' * 10 + ': ')
-    passwd = getpass('Nhap password dang nhap' + ' ' * 10 + ': ')
-
     try:
+        print('-' * 15 + 'Trung-VDT-098886298' + '-' * 7)
+        ip = input('Nhap dia chi IP quan tri' + ' ' * 9 + ': ')
+        monitor = int(input('Lua chon 1(ospf), 2(isis), 3(lsp): '))
+        username = input('Nhap username dang nhap' + ' ' * 10 + ': ')
+        passwd = getpass('Nhap password dang nhap' + ' ' * 10 + ': ')
         p_router = judev(ip, username, passwd)
         if monitor == 1:
             p_router.check_ospf()
@@ -210,6 +253,6 @@ if __name__ == '__main__':
     except Exception as e:
         print("Lien he Trung-0988886298 de sua loi")
 
-    # p_router = judev('172.16.1.5', 'root', 'root123')
-    # p_router.check_ospf()
-    # # p_router.check_lsp()
+    # p_router = judev('172.16.1.1', 'root', 'root123')
+    # # p_router.check_ospf()
+    # p_router.check_lsp()
